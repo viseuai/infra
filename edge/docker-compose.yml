@@ -61,14 +61,33 @@ services:
     restart: unless-stopped
     environment:
       OIDC_ISSUER: https://auth.viseuai.org/realms/viseu
+      UPSTREAM_URL: http://llamacpp:8081
+    depends_on:
+      - llamacpp
     networks:
       - edge
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.platform.rule=Host(`platform.viseuai.org`)"
-      - "traefik.http.routers.platform.entrypoints=websecure"
-      - "traefik.http.routers.platform.tls.certresolver=le"
-      - "traefik.http.services.platform.loadbalancer.server.port=8080"
+      - "traefik.http.routers.api.rule=Host(`api.viseuai.org`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=le"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+
+  llamacpp:
+    # "node zero": tiny CPU model on the edge host itself, so the platform
+    # has a real open-weight backend before the first mesh node exists.
+    image: ghcr.io/ggml-org/llama.cpp:server
+    restart: unless-stopped
+    command: >-
+      -m /models/qwen2.5-0.5b-instruct-q4_k_m.gguf
+      --alias qwen2.5-0.5b-instruct
+      --host 0.0.0.0 --port 8081
+      -c 2048 --threads 2
+    volumes:
+      - /opt/viseu/models:/models:ro
+    networks:
+      - edge
+    # internal only: reachable through the gateway, never published
 
   postgres:
     image: postgres:17-alpine
