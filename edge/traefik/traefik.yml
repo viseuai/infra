@@ -1,0 +1,33 @@
+# Traefik static configuration · Viseu AI Lab edge
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: viseu-edge
+
+certificatesResolvers:
+  le:
+    acme:
+      email: geral@viseuai.org
+      storage: /letsencrypt/acme.json
+      httpChallenge:
+        entryPoint: web
+
+api:
+  dashboard: false
+
+log:
+  level: INFO
+
+accessLog: {}

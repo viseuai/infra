@@ -1,0 +1,26 @@
+// Mesh ACL policy · Viseu AI Lab
+// Hub-and-spoke: the gateway reaches inference nodes; the edge host reaches
+// everything (monitoring, admin); nodes initiate nothing. Volunteer machines
+// can never probe each other.
+{
+  "tagOwners": {
+    "tag:edge":    ["infra@"],
+    "tag:gateway": ["infra@"],
+    "tag:node":    ["infra@"]
+  },
+
+  "acls": [
+    // gateway → inference nodes (requests, health probes)
+    {
+      "action": "accept",
+      "src":    ["tag:gateway"],
+      "dst":    ["tag:node:*"]
+    },
+    // edge → everything on the mesh (prometheus scrapes, admin)
+    {
+      "action": "accept",
+      "src":    ["tag:edge"],
+      "dst":    ["tag:node:*", "tag:gateway:*"]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+# headscale configuration · Viseu AI Lab mesh control plane
+# Reverse-proxied by Traefik at https://mesh.viseuai.org
+# (neutral hostname by design: DNS does not reveal the software)
+
+server_url: https://mesh.viseuai.org
+listen_addr: 0.0.0.0:8080
+metrics_listen_addr: 127.0.0.1:9090
+grpc_listen_addr: 127.0.0.1:50443
+grpc_allow_insecure: false
+
+noise:
+  private_key_path: /var/lib/headscale/noise_private.key
+
+prefixes:
+  v4: 100.64.0.0/10
+  v6: fd7a:115c:a1e0::/48
+  allocation: sequential
+
+derp:
+  server:
+    # Embedded DERP relay: traffic falls back here when NAT hole-punching
+    # fails (CGNAT, strict firewalls). STUN on 3478/udp is exposed directly.
+    enabled: true
+    region_id: 999
+    region_code: viseu
+    region_name: Viseu Embedded DERP
+    stun_listen_addr: 0.0.0.0:3478
+    private_key_path: /var/lib/headscale/derp_server_private.key
+    automatically_add_embedded_derp_region: true
+    ipv4: 54.171.241.23
+  # Self-hosted only: no Tailscale public DERP map.
+  urls: []
+  paths: []
+  auto_update_enabled: false
+  update_frequency: 24h
+
+database:
+  type: sqlite
+  sqlite:
+    path: /var/lib/headscale/db.sqlite
+    write_ahead_log: true
+
+disable_check_updates: true
+ephemeral_node_inactivity_timeout: 30m
+
+policy:
+  mode: file
+  path: /etc/headscale/policy.json
+
+dns:
+  magic_dns: true
+  base_domain: internal.viseuai.org # MagicDNS names; resolvable only on the mesh
+  nameservers:
+    global:
+      - 1.1.1.1
+      - 9.9.9.9
+  search_domains: []
+
+log:
+  level: info
+  format: text
+
+logtail:
+  enabled: false
+
+randomize_client_port: false
