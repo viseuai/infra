@@ -67,6 +67,7 @@ services:
       DATABASE_URL: postgres://gateway:${GATEWAY_DB_PASSWORD}@postgres:5432/gateway?sslmode=disable
       QUOTA_DAILY_REQUESTS: "500"
       QUOTA_MONTHLY_TOKENS: "2000000"
+      CORS_ORIGINS: https://chat.viseuai.org,https://platform.viseuai.org
     depends_on:
       llamacpp:
         condition: service_started
@@ -96,6 +97,34 @@ services:
     networks:
       - edge
     # internal only: reachable through the gateway, never published
+
+  chat:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    volumes:
+      - /opt/viseu/chat:/usr/share/nginx/html:ro
+    networks:
+      - edge
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat.rule=Host(`chat.viseuai.org`)"
+      - "traefik.http.routers.chat.entrypoints=websecure"
+      - "traefik.http.routers.chat.tls.certresolver=le"
+      - "traefik.http.services.chat.loadbalancer.server.port=80"
+
+  console:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    volumes:
+      - /opt/viseu/console:/usr/share/nginx/html:ro
+    networks:
+      - edge
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.console.rule=Host(`platform.viseuai.org`)"
+      - "traefik.http.routers.console.entrypoints=websecure"
+      - "traefik.http.routers.console.tls.certresolver=le"
+      - "traefik.http.services.console.loadbalancer.server.port=80"
 
   postgres:
     image: postgres:17-alpine
