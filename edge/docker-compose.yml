@@ -68,6 +68,8 @@ services:
       QUOTA_DAILY_REQUESTS: "500"
       QUOTA_MONTHLY_TOKENS: "2000000"
       CORS_ORIGINS: https://chat.viseuai.org,https://platform.viseuai.org
+      KC_ADMIN_CLIENT_SECRET: ${KC_ADMIN_CLIENT_SECRET:-}
+      HEADSCALE_API_KEY: ${HEADSCALE_API_KEY:-}
     depends_on:
       llamacpp:
         condition: service_started
